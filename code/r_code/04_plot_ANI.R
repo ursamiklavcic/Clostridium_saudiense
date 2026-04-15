@@ -6,7 +6,10 @@ library(tidyr)
 library(ggplot2)
 library(ggpubr)
 
-theme_set(theme_bw(base_size = 14))
+theme_set(theme_bw(base_size = 12) +
+            theme(plot.title   = element_text(size = 11),
+                  axis.title   = element_text(size = 12),
+                  axis.text    = element_text(size = 12)))
 
 ANIm <- read.table('002_ANI/ANIm_identity.tsv', sep = '\t', header = TRUE) %>%  
   pivot_longer(names_to = 'sample2', values_to = 'ANIm', cols = starts_with('H00')) %>%  
@@ -73,10 +76,11 @@ ANIb_coverage
 ggarrange(ANIb_break + geom_vline(xintercept = 0.9972, color = 'skyblue', linewidth = 2)
           + theme(axis.title.x = element_blank(), 
                                 axis.text.x = element_blank(), 
-                                axis.ticks.x = element_blank()), 
-          ANIb_coverage, 
+                                axis.ticks.x = element_blank()) +
+            labs(tag = 'A'), 
+          ANIb_coverage + labs(tag = 'B'), 
           nrow = 2, align = 'v', heights = c(0.9, 1))
-ggsave('out/article/genome_coverage_ANIb.svg')
+ggsave('out/Frontiers/genome_coverage_ANIb.svg')
 
 # Correlation between ANI and coverage ? 
 ANI_both <- full_join(ANI, ANI_coverage, by = c('sample1', 'sample2')) %>% 

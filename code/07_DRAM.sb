@@ -1,0 +1,15 @@
+#!/bin/bash
+#SBATCH --job-name=dram
+#SBATCH --cpus-per-task=24
+#SBATCH --nodes=1
+#SBATCH --mem=40G
+#SBATCH --time=5-20:00:00
+#SBATCH --output=dram_%j.out
+
+path="/home/nlzoh.si/ursmik1/projects/C_saudiense"
+
+eval "$(conda shell.bash hook)"
+source activate DRAM_new
+
+DRAM.py annotate -i "$path/001_all_fasta/*.fasta" -o "$path/005_DRAM" --threads 24
+DRAM.py distill -i "$path/005_DRAM/annotations.tsv" -o "$path/005_DRAM/distill" --trna_path "$path/005_DRAM/trnas.tsv" --rrna_path "$path/005_DRAM/rrnas.tsv"

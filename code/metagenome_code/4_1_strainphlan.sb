@@ -1,0 +1,66 @@
+#!/bin/bash
+
+#SBATCH --job-name=strainphlan
+#SBATCH --nodes=1
+#SBATCH --nodelist=heracpu02.nlzoh.si
+#SBATCH --cpus-per-task=50
+#SBATCH --mem=150G
+#SBATCH --time=3-24:00:00
+#SBATCH --output=result_%j.log
+
+eval "$(conda shell.bash hook)"
+source activate metaphlan
+
+raw="/volumes/homehpc/storage/raw_data/BGI/F23A910000041_BGI_metagenomic/raw_fq"
+dir="/volumes/homehpc/storage/finished_projects/UrsaM/SQM_Microbiota/strainphlan"
+
+#mkdir -p "${dir}/sams"
+#mkdir -p "${dir}/bt2"
+#mkdir -p "${dir}/output"
+
+#for fwd in "${raw}"/*.1.fq.gz; do
+#    sample_name=$(basename "${fwd}" .1.fq.gz)
+#    rev="${raw}/${sample_name}.2.fq.gz"
+#
+#    # Output filenames
+#    bowtie2_out="${dir}/bt2/${sample_name}.bowtie2.bz2"
+#    profile_out="${dir}/output/profiled_${sample_name}.txt"
+#    sam_out="${dir}/sams/${sample_name}.sam.bz2"
+#
+#    metaphlan "${fwd},${rev}" \
+#        --bowtie2out "${bowtie2_out}" \
+#        --samout "${sam_out}" \
+#        --nproc 100 \
+#        --input_type fastq \
+#        --unclassified_estimation \
+#        -o "${profile_out}"
+#done
+
+#mkdir -p "${dir}/consensus_markers"
+#sample2markers.py -i "${dir}/sams/"*.sam.bz2 -o "${dir}/consensus_markers" -n 100
+
+#cut -f1 ${dir}/../metaphlan/metaphlan_abundance_table.txt | grep -o 't__[^|;\t]*' | sort -u > ${dir}/strain.list
+
+#mkdir -p db_markers
+
+#for strain in $(cat ${dir}/strain.list); do
+#  extract_markers.py -c "$strain" -o db_markers/
+#done
+
+# In interactive mode from here onwards.. as I was trying different things. 
+strainphlan -s "${dir}/consensus_markers/"*.pkl -m clade_markers/t__SGB6178 -r ~/projects/C_saudiense/01_FASTA/reference.fasta -c t__SGB6178 -o "${dir}/output" --phylophlan_mode fast --mutation_rates -n 20
+
+# Download pyphlan github repo git clone into ~/bin
+# Extract pairwise phylogenetic distances (normalized by th pyhlogenetic distance) into .tsv file 
+~/bin/pyphlan/tree_pairwisedists.py -n output/t__SGB6178_mutation_rates/RAxML_bestTree.t__SGB6178.StrainPhlAn4.tre ./output/t__SGB6178_mutation_rates/t__SGB6178_nGD.tsv
+
+# Setting species-specific strain identity thresholds (this was done before, we do not need to repeat it) 
+
+# R code, to be sure what our threshold for CLostridium saudiense is! 
+~/projects/C_saudiense/00_CODE/determine_threshold.R 
+
+# Detection of strain sharing events 
+strain_transmission.py --tree "${dir}/output/t__SGB6178_mutation_rates/RAxML_bestTree.t__SGB6178.StrainPhlAn4.tre" --metadata /home/storage/finished_projects/UrsaM/SQM_Microbiota/strainphlan/metadata.tsv --output_dir strainphlan/output/strain_transmission/ --threshold 0.03
+
+
+

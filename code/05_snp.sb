@@ -1,0 +1,56 @@
+#!/bin/bash
+#SBATCH --job-name=snp
+#SBATCH --nodes=1
+#SBATCH --ntasks=5
+#SBATCH --cpus-per-task=8
+#SBATCH --mem-per-cpu=2G
+#SBATCH --time=24:00:00
+#SBATCH --output=snp_%j.out
+
+start_time=$(date +%s)
+source /home/nlzoh.si/larbez1/miniconda3/bin/activate /home/nlzoh.si/larbez1/miniconda3/envs/snp_env
+
+INPUT_DIR=$1
+OUTPUT_DIR=$2
+REF=$3
+NAME=$(basename $OUTPUT_DIR)
+mkdir -p $OUTPUT_DIR/{snippy,gubbins}
+
+echo "Snippy"
+for FILE in $INPUT_DIR/*fna; do
+  while [ "$(jobs -p | wc -l)" -ge "$SLURM_NTASKS" ]; do
+    wait -n
+  done
+  SAMPLE=$(basename $FILE .fna)
+  srun --ntasks=1 snippy --cpus $SLURM_CPUS_PER_TASK --ctgs $FILE --outdir $OUTPUT_DIR/snippy/$SAMPLE --reference $REF --force --cleanup &
+done
+wait
+
+echo "Snippy - core"
+for dir in "$OUTPUT_DIR"/snippy/*/; do
+  if ls "$dir"*fake* &>/dev/null; then
+    mkdir -p "$OUTPUT_DIR"/no_SNP_found
+    mv $dir "$OUTPUT_DIR"/no_SNP_found/
+  fi
+done
+wait
+
+cd $OUTPUT_DIR/snippy/
+snippy-core --ref $REF $OUTPUT_DIR/snippy/*
+#sed '/^>Reference$/,/^>/ {/^>Reference$/d; /^>/!d}' $OUTPUT_DIR/snippy/core.full.aln > $OUTPUT_DIR/snippy/core_no_ref.full.aln
+snippy-clean_full_aln $OUTPUT_DIR/snippy/core.full.aln > $OUTPUT_DIR/snippy/clean.full.aln #core_no_ref.full.aln
+#rm $OUTPUT_DIR/snippy/core_no_ref.full.aln
+
+echo "Gubbins"
+cd $OUTPUT_DIR/gubbins/
+srun --ntasks=1 run_gubbins.py --threads $SLURM_CPUS_PER_TASK -f 50 --prefix gubb $OUTPUT_DIR/snippy/clean.full.aln
+wait
+
+snp-sites -c -o $OUTPUT_DIR/gubbins/${NAME}_core.fasta $OUTPUT_DIR/gubbins/gubb.filtered_polymorphic_sites.fasta
+
+#iqtree -s $OUTPUT_DIR/gubbins/*clean.core.fasta -m GRT+G -nt AUTO --redo --prefix tree --keep-ident --alrt 1000 --ufboot 1000
+conda deactivate
+
+end_time=$(date +%s)
+duration=$((end_time - start_time))
+echo "Trajanje: $((duration/3600))h $((duration/60))min"

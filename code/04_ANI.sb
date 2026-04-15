@@ -1,0 +1,21 @@
+#!/bin/bash
+#SBATCH --job-name=pyANI
+#SBATCH --cpus-per-task=24
+#SBATCH --nodes=1
+#SBATCH --mem=40G
+#SBATCH --time=3-20:00:00
+#SBATCH --output=ani_%j.out
+
+path="/home/storage/finished_projects/UrsaM/C_saudiense/C_saudiense_v2"
+
+eval "$(conda shell.bash hook)"
+source activate pyANI
+
+# mkdir -p "$path/02_ANI"
+
+#pyani-plus anim "$path/01_fasta" --database "$path/02_ANI/csaudiense.db" --create-db --name 'Clostridium saudiense'
+#pyani-plus anib "$path/01_fasta" --database "$path/02_ANI/csaudiense.db" --name 'Clostridium saudiense'
+
+pyani-plus export-run --database "$path/02_ANI/csaudiense.db" --outdir "$path/02_ANI" --run-id 1
+pyani-plus export-run --database "$path/02_ANI/csaudiense.db" --outdir "$path/02_ANI" --run-id 2
+

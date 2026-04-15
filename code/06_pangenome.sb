@@ -1,0 +1,46 @@
+#!/bin/bash
+#SBATCH --job-name=pangenome
+#SBATCH --cpus-per-task=24
+#SBATCH --nodes=1
+#SBATCH --mem=40G
+#SBATCH --time=3-20:00:00
+#SBATCH --output=pangenome_%j.out
+
+path="/home/storage/finished_projects/UrsaM/C_saudiense/C_saudiense_v2"
+
+eval "$(conda shell.bash hook)"
+
+# prokka
+source /home/nejc/miniconda3/bin/activate /home/nejc/miniconda3/envs/prokka
+
+#for k in "$path"/01_fasta/*.fna.gz; do prokka $k --outdir "$path/04_prokka/"$k".prokka.output --prefix PROKKA_$k; echo $k; done
+
+for k in "$path"/01_fasta/*.fna; do
+    fname=$(basename "$k")                 # e.g. H009_221.fna.gz
+    sample=${fname%.fna}                # e.g. H009_221
+
+    outdir="$path/04_prokka/$sample"
+
+    prokka "$k" \
+      --outdir "$outdir" \
+      --prefix "$sample"
+
+    echo "Annotated $k -> $outdir"
+done
+
+conda deactivate
+
+# Roary
+source /home/nlzoh.si/leomar1/miniconda3/bin/activate /home/nlzoh.si/leomar1/miniconda3/envs/roary
+
+cd "$path/04_prokka"
+mkdir GFF
+cp ./*/*.gff GFF
+
+cd GFF
+roary -n -e -p 18 ./*.gff -f "$path/04_prokka/roary"
+
+conda deactivate
+
+# Load into phandango with metadata etc.
+

@@ -1,0 +1,29 @@
+#!/bin/bash
+#SBATCH --job-name=flye
+#SBATCH --output=result.txt
+#SBATCH --ntasks=1
+#SBATCH --time=148:00:00
+#SBATCH --mem-per-cpu=100
+#SBATCH --cpus-per-task=48
+#SBATCH --output=flye.log
+
+
+#export PATH=$PATH:/home/nlzoh.si/leomar1/miniconda3/bin
+cd /home/storage/finished_projects/UrsaM/C_saudiense/long_read_v10/3filtered_sequences
+outdir=/home/storage/finished_projects/UrsaM/C_saudiense/long_read_v10/4flye
+
+
+#!/bin/bash
+echo ''
+echo 'RUNNING FLYE'
+echo ''
+
+source /home/nlzoh.si/leomar1/miniconda3/bin/activate /home/nlzoh.si/leomar1/miniconda3/envs/nanopore
+
+for file in *ont_P1.trim.fastq.gz;  do
+  while [ "$(jobs -p | wc -l)" -ge "$SLURM_NTASKS" ]; do
+        sleep 30
+  done
+  filename=$(basename "$file")
+	srun flye --nano-corr $file -t 48 -o ./"${filename}_output" 
+done

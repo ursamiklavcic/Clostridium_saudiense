@@ -3,7 +3,6 @@
 003_snippy/
 004_prokka/
 005_DRAM/
-006_quantify_genes_Lara/
 007_AMRfinder+/
 code_old/
 .Rproj.user/
@@ -11,7 +10,7 @@ code_old/
 010_define_strains_metagenomes/
 011_analysis_with_NCBI_genomes/
 ANVIO/
-C_saudiense.Rproj
+Clostridium_saudiense.Rproj
 log_files/
 out/
 

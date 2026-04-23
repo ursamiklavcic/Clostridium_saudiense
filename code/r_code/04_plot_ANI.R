@@ -11,6 +11,21 @@ theme_set(theme_bw(base_size = 12) +
                   axis.title   = element_text(size = 12),
                   axis.text    = element_text(size = 12)))
 
+# On all genomes from NCBI included
+ANI1 <- read.table('002_ANI/withNCBIgenomes/ANIb_identity.tsv', sep = '\t', header = TRUE) %>%  
+  pivot_longer(names_to = 'sample2', values_to = 'ANIb', cols = starts_with(c('H00', 'GC'))) %>%  
+  rename(sample1= X)
+
+ANI1 %>% 
+  ggplot(aes(x = ANIb)) +
+  geom_histogram(binwidth = 0.0001) +
+  labs(x = 'ANIb percentage identity [%]', y = 'Pairwise comparisons') 
+
+ANI1 %>% filter(ANIb < 0.96)
+
+
+
+# ANI score for my genomes only 
 ANIm <- read.table('002_ANI/ANIm_identity.tsv', sep = '\t', header = TRUE) %>%  
   pivot_longer(names_to = 'sample2', values_to = 'ANIm', cols = starts_with('H00')) %>%  
   rename(sample1= X)

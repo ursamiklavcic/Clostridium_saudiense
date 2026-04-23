@@ -11,13 +11,13 @@ theme_set(theme_bw(base_size = 14))
 # We will use this genes to map metagenomic reads back to them and get 
 # a better representation of which strains were present when within individual H at each time point
 
-genes_pre <- read.csv('~/projects/C_saudiense/004_prokka/roary/gene_presence_absence.csv') %>% 
+genes_pre <- read.csv('~/projects/Clostridium_saudiense/004_prokka/roary/gene_presence_absence.csv') %>% 
   pivot_longer(names_to = 'samples', values_to = 'PA', cols = starts_with('H00')) %>%  
   mutate(PA_01 = ifelse(PA != '', 1, 0), 
          samples = str_remove_all(samples, ".fasta"), 
          samples = str_remove_all(samples, "_hybrid"))
 
-metadata_genomes <- read.table('~/projects/C_saudiense/metadata_genomes.tsv', sep = '\t', header = T)
+metadata_genomes <- read.table('~/projects/Clostridium_saudiense/data/metadata_genomes.tsv', sep = '\t', header = T)
 genes <- left_join(genes_pre, metadata_genomes, by = 'samples')
 
 no_strains <- group_by(genes, STRAINS) %>%  
@@ -54,7 +54,7 @@ strain_genes %>% #filter(Annotation == 'hypothetical protein') %>%
 # RUN LARA's SCRIPTS TO OBTAIN GENE SEQUENCES, later this code 
 
 # value is already normalized by the gene length! 
-genes_tpm <- read.table('~/projects/C_saudiense/006_quantify_genes_Lara/combine_tpm.txt', header = T) %>% 
+genes_tpm <- read.table('~/projects/Clostridium_saudiense/006_quantify_genes_Lara/combine_tpm.txt', header = T) %>% 
   pivot_longer(-c(Gene, Gene_ID))
 
 metadata <- read.table('~/projects/longitudinal_shotgun/data/metadata.csv', sep = ';', header = TRUE) %>%  
@@ -207,7 +207,7 @@ ggsave('out/gene_metagenomes/TPM_strains_metagenomes_log10.svg')
 
 
 # What if instead of working with TPM, I work with count and normalize it by length of gene and number of genes per strain? 
-genes_count_pre <- read.table('~/projects/C_saudiense/006_quantify_genes_Lara/combined_counts.txt', sep = '', header = T) %>%  
+genes_count_pre <- read.table('~/projects/Clostridium_saudiense/006_quantify_genes_Lara/combined_counts.txt', sep = '', header = T) %>%  
   pivot_longer(-Gene_ID)
 
 genes_norm_count <- left_join(genes_count_pre, select(strain_genes, ID, STRAIN), by = join_by('Gene_ID' == 'ID')) %>%
@@ -238,6 +238,7 @@ genes_norm_count %>%
   labs(x = 'Day', y = '# reads normalized by the gene length\nand number of genes per strain', fill = 'Event', color = 'Strain')
 ggsave('out/gene_metagenomes/counts_normalized_by_gene_length.svg', dpi = 600)
 
+saveRDS(genes_norm_count %>% filter(person == 'H'), '006_quantify_genes_Lara/genes_norm_count.RDS')
 # log 10
 genes_norm_count %>% 
   filter(person == 'H') %>% 

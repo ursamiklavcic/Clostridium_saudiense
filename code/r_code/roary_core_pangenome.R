@@ -119,4 +119,13 @@ genes_metagenomes %>%
   labs(x = 'Number of accessory genes', y = 'Normlaized read counts', color = 'STRAIN')
 ggsave('out/roary/no_accesory_genes_abundance_strain.png', dpi=400)
 
+# remove low coverage genomes: 
+# GCA_036305605.1_ASM3630560v1_genomic in GCA_981806595.1_ERR14205218_bin_42192_genomic
+roary %>% 
+  filter(!genome %in% c('GCA_036305605.1_ASM3630560v1_genomic', 
+                        'GCA_981806595.1_ERR14205218_bin_42192_genomic')) %>% 
+  filter(PA_01 == 1) %>% 
+  group_by(Gene) %>% 
+  reframe(n_genomes = n_distinct(genome)) %>% 
+  filter(n_genomes > as.integer(77*0.99))
   

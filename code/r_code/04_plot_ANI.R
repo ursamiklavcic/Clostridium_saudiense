@@ -16,6 +16,10 @@ ANI1 <- read.table('002_ANI/withNCBIgenomes/ANIb_identity.tsv', sep = '\t', head
   pivot_longer(names_to = 'sample2', values_to = 'ANIb', cols = starts_with(c('H00', 'GC'))) %>%  
   rename(sample1= X)
 
+ANI1_coverage <- read.table('002_ANI/withNCBIgenomes/ANIb_query_cov.tsv', sep = '\t', header = TRUE) %>% 
+  pivot_longer(names_to = 'sample2', values_to = 'coverage_ANIb', cols = starts_with(c('H00', 'GC'))) %>% 
+  rename('sample1' = 'X')
+
 ANI1 %>% 
   ggplot(aes(x = ANIb)) +
   geom_histogram(binwidth = 0.0001) +
@@ -23,7 +27,15 @@ ANI1 %>%
 
 ANI1 %>% filter(ANIb < 0.96)
 
+ANI1_coverage %>% full_join(ANI1, by = c('sample1', 'sample2')) %>%  
+  ggplot(aes(y = coverage_ANIb, x = ANIb)) + 
+  geom_point() +
+  labs(y = 'ANIb coverage', x = 'ANIb') 
+  
 
+low_cov <- filter(ANI1_coverage, coverage_ANIb < 0.6)
+
+  
 
 # ANI score for my genomes only 
 ANIm <- read.table('002_ANI/ANIm_identity.tsv', sep = '\t', header = TRUE) %>%  

@@ -1,5 +1,6 @@
 library(dplyr)
 library(tidyr)
+library(stringr)
 library(ggplot2)
 
 # gene presence absence 
@@ -10,7 +11,7 @@ gene_pa <- read.table('004_prokka/roary/gene_presence_absence.csv', sep = ',', h
          genome = str_remove_all(genome, ".fasta"), 
          genome = str_remove_all(genome, "_hybrid"))
 
-metadata_genomes <- read.table('~/projects/C_saudiense/metadata_genomes.tsv', sep = '\t', header = T) %>%  
+metadata_genomes <- read.table('~/projects/Clostridium_saudiense/data/metadata_genomes.tsv', sep = '\t', header = T) %>%  
   rename('genome' = 'samples')
 genes <- left_join(gene_pa, metadata_genomes, by = 'genome')
 

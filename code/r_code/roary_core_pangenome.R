@@ -128,4 +128,61 @@ roary %>%
   group_by(Gene) %>% 
   reframe(n_genomes = n_distinct(genome)) %>% 
   filter(n_genomes > as.integer(77*0.99))
+
+# Is the problem in combination of my genes and genes from NCBI genomes?
+roary %>% 
+  filter(!genome %in% c('GCA_036305605.1_ASM3630560v1_genomic', 
+                        'GCA_981806595.1_ERR14205218_bin_42192_genomic')) %>% 
+  filter(group == 'Public_37') %>% 
+  filter(PA_01 == 1) %>% 
+  group_by(Gene) %>% 
+  reframe(n_genomes = n_distinct(genome)) %>% 
+  filter(n_genomes > as.integer(35*0.99)) # 304
+
+# The problem is definetely in NCBI genomes, but which ones? 
+# If I filter out MAGs + the 2 above with low ANI score 
+roary %>% 
+  filter(!genome %in% c('GCA_036305605.1_ASM3630560v1_genomic', 
+                        'GCA_981806595.1_ERR14205218_bin_42192_genomic', 
+                        "GCF_958427955.1_ERR9578258_bin.29_MetaWRAP_v1.3_MAG_genomic",
+                        "GCF_958445175.1_ERR9609794_bin.4_MetaWRAP_v1.3_MAG_genomic", 
+                        "GCF_959024925.1_ERR10149224_bin.5_MetaWRAP_v1.3_MAG_genomic", 
+                        "GCA_977999515.1_ERR2726531_bin_1330_genomic",                
+                        "GCA_981806595.1_ERR14205218_bin_42192_genomic",              
+                        "GCA_982249015.1_ERR14141089_bin_32613_genomic",              
+                        "GCA_982337985.1_ERR14205104_bin_53166_genomic")) %>% 
+  filter(group == 'Public_37') %>% 
+  #reframe(n = n_distinct(genome))
+  filter(PA_01 == 1) %>% 
+  group_by(Gene) %>% 
+  reframe(n_genomes = n_distinct(genome)) %>% 
+  filter(n_genomes > as.integer(29*0.99)) # 703
+
+# Roary using only short read assemblies 
+roary_short <- read.table('004_prokka/roary_illumina/gene_presence_absence.csv', sep = ',', header = TRUE) %>%  
+  pivot_longer(names_to = 'genome', values_to = 'PA', cols = starts_with(c('H00', 'GC'))) %>%  
+  mutate(PA_01 = ifelse(PA != '', 1, 0)) %>% 
+  mutate(group = ifelse(grepl('H00', genome), 'My_genomes', 'NCBI')) 
+
+
+roary_short %>% 
+  filter(!genome %in% c('GCA_036305605.1_ASM3630560v1_genomic', 
+                        'GCA_981806595.1_ERR14205218_bin_42192_genomic', 
+                        "GCF_958427955.1_ERR9578258_bin.29_MetaWRAP_v1.3_MAG_genomic",
+                        "GCF_958445175.1_ERR9609794_bin.4_MetaWRAP_v1.3_MAG_genomic", 
+                        "GCF_959024925.1_ERR10149224_bin.5_MetaWRAP_v1.3_MAG_genomic", 
+                        "GCA_977999515.1_ERR2726531_bin_1330_genomic",                
+                        "GCA_981806595.1_ERR14205218_bin_42192_genomic",              
+                        "GCA_982249015.1_ERR14141089_bin_32613_genomic",              
+                        "GCA_982337985.1_ERR14205104_bin_53166_genomic")) %>% 
+  #reframe(n = n_distinct(genome))
+  filter(PA_01 == 1) %>% 
+  group_by(Gene) %>% 
+  reframe(n_genomes = n_distinct(genome)) %>% 
+  filter(n_genomes > as.integer(71*0.99))
+  
+  
+  
+  
+  
   

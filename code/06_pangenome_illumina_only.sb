@@ -1,0 +1,44 @@
+#!/bin/bash
+#SBATCH --job-name=pangenome
+#SBATCH --cpus-per-task=24
+#SBATCH --nodes=1
+#SBATCH --mem=40G
+#SBATCH --time=3-20:00:00
+#SBATCH --output=pangenome_%j.out
+
+path="/home/nlzoh.si/ursmik1/projects/Clostridium_saudiense"
+
+eval "$(conda shell.bash hook)"
+
+# prokka
+#source /home/nejc/miniconda3/bin/activate /home/nejc/miniconda3/envs/prokka
+
+#for k in "$path"/001_all_fasta/illumina_assembly/*.fasta; do
+#    fname=$(basename "$k")                 # e.g. H009_221.fasta
+#    sample=${fname%.fasta}                # e.g. H009_221
+#
+#    outdir="$path/004_prokka/$sample"
+#
+#    prokka "$k" \
+#      --outdir "$outdir" \
+#      --prefix "$sample"
+#
+#    echo "Annotated $k -> $outdir"
+#done
+
+#conda deactivate
+
+# Roary
+source /home/nlzoh.si/leomar1/miniconda3/bin/activate /home/nlzoh.si/leomar1/miniconda3/envs/roary
+
+cd "$path/004_prokka"
+#mkdir GFF_illumina_only
+#cp ./*/*/.gff GFF_illumina
+
+cd ./GFF_illumina
+roary -n -e -p 18 ./*.gff -f "$path/004_prokka/roary_illumina"
+
+#conda deactivate
+
+# Load into phandango with metadata etc.
+

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+#SBATCH --job-name=genomad
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=50 
+#SBATCH --mem=150G
+#SBATCH --time=2-24:00:00
+#SBATCH --output=genomad_%j.log        # Standard output and error log
+
+eval "$(conda shell.bash hook)"
+source activate genomad
+
+raw_path="/home/nlzoh.si/ursmik1/projects/Clostridium_saudiense/001_all_fasta"
+output="/home/nlzoh.si/ursmik1/projects/Clostridium_saudiense/012_genomad"
+db="/volumes/homehpc/storage/DB/genomad/genomad_db"
+
+for fasta in "$raw_path"/*.fasta; do
+    genome_name=$(basename "$fasta" .fasta)
+    mkdir -p "$output/$genome_name"
+    genomad end-to-end --cleanup --splits 3 "$fasta" "$output/$genome_name" /volumes/homehpc/storage/DB/genomad/genomad_db
+done

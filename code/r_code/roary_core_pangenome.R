@@ -158,6 +158,21 @@ roary %>%
   reframe(n_genomes = n_distinct(genome)) %>% 
   filter(n_genomes > as.integer(29*0.99)) # 703
 
+# remove bad QC
+roary %>%  
+  filter(!genome %in% c('GCA_036305605.1_ASM3630560v1_genomic',
+                        'GCA_037313915.1_ASM3731391v1_genomic',
+                        'GCA_046965785.1_ASM4696578v1_genomic',
+                        'GCF_039946575.1_ASM3994657v1_genomic',
+                        'GCA_982337985.1_ERR14205104_bin_53166_genomic' )) %>% 
+  filter(PA_01 == 1) %>% 
+  group_by(Gene) %>% 
+  reframe(n_genomes = n_distinct(genome)) %>% 
+  filter(n_genomes > as.integer(74*0.99)) # 241
+
+
+
+
 # Roary using only short read assemblies 
 roary_short <- read.table('004_prokka/roary_illumina/gene_presence_absence.csv', sep = ',', header = TRUE) %>%  
   pivot_longer(names_to = 'genome', values_to = 'PA', cols = starts_with(c('H00', 'GC'))) %>%  
@@ -180,7 +195,19 @@ roary_short %>%
   group_by(Gene) %>% 
   reframe(n_genomes = n_distinct(genome)) %>% 
   filter(n_genomes > as.integer(71*0.99))
-  
+
+# Remove bad QC 
+roary_short %>%  
+  filter(!genome %in% c('GCA_036305605.1_ASM3630560v1_genomic',
+            'GCA_037313915.1_ASM3731391v1_genomic',
+            'GCA_046965785.1_ASM4696578v1_genomic',
+            'GCF_039946575.1_ASM3994657v1_genomic',
+            'GCA_982337985.1_ERR14205104_bin_53166_genomic' )) %>% 
+  #reframe(n = n_distinct(genome))
+  filter(PA_01 == 1) %>% 
+  group_by(Gene) %>% 
+  reframe(n_genomes = n_distinct(genome)) %>% 
+  filter(n_genomes > as.integer(74*0.99)) # 1385
   
   
   

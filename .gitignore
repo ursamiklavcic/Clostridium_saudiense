@@ -8,6 +8,8 @@
 code_old/
 .Rproj.user/
 008_breseq/
+008_mge/
+008_mge_mob_suite/
 010_define_strains_metagenomes/
 011_analysis_with_NCBI_genomes/
 ANVIO/

@@ -1,0 +1,32 @@
+#!/bin/bash
+#SBATCH --job-name=mob
+#SBATCH --nodes=1
+#SBATCH --ntasks=5
+#SBATCH --cpus-per-task=8
+#SBATCH --mem-per-cpu=2G
+#SBATCH --time=24:00:00
+#SBATCH --output=mob_%j.out
+
+start_time=$(date +%s)
+eval "$(conda shell.bash hook)"
+source /home/nlzoh.si/larbez1/miniconda3/bin/activate /home/nlzoh.si/larbez1/miniconda3/envs/mob_env
+
+input=$1
+output=$2/all_plasmids
+mkdir -p $output
+
+for FILE in $input/*fasta; do
+  while [ "$(jobs -p | wc -l)" -ge "$SLURM_NTASKS" ]; do
+    wait -n
+  done
+  ime=$(basename $FILE .fasta)
+  srun --ntasks=1 mob_recon -n $SLURM_CPUS_PER_TASK -i $FILE -o "$output/$ime" -p "$ime" --force --min_length 500 & #--min_con_cov 90
+done
+
+wait
+
+conda deactivate
+end_time=$(date +%s)
+duration=$((end_time - start_time))
+echo "Duration: $((duration/60))min"
+

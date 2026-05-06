@@ -1,0 +1,29 @@
+#!/bin/bash
+#SBATCH --job-name=mge
+#SBATCH --nodes=1
+#SBATCH --ntasks=5
+#SBATCH --cpus-per-task=8
+#SBATCH --mem-per-cpu=2G
+#SBATCH --time=1-00:00:00
+
+python_code="/home/storage/finished_projects/LaraB/skripte/MGE/zdruzi_csv.py"
+eval "$(conda shell.bash hook)"
+source /home/nlzoh.si/larbez1/miniconda3/bin/activate /home/nlzoh.si/larbez1/miniconda3/envs/cge_env
+
+INPUT=$1
+OUTPUT=$2
+mkdir -p $OUTPUT
+
+export TMPDIR=/home/nlzoh.si/ursmik1/projects/Clostridium_saudiense/008_mge/tpm
+mkdir -p $TMPDIR
+
+for file in $INPUT/*fasta; do
+  while [ "$(jobs -p | wc -l)" -ge "$SLURM_NTASKS" ]; do
+    wait -n
+  done
+  SAMPLE=$(basename $file .fasta)
+  srun --ntasks=1 mefinder find -c $file -t $SLURM_CPUS_PER_TASK $OUTPUT/$SAMPLE --min-coverage 0.8 &
+done
+wait
+
+python $python_code $OUTPUT

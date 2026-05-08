@@ -1,6 +1,11 @@
 # MGE detection 
 
 library(readxl)
+library(tidyr)
+library(stringr)
+library(purrr)
+library(readr)
+
 set.seed(96)
 theme_set(theme_bw(base_size = 12) +
             theme(plot.title   = element_text(size = 12),
@@ -20,6 +25,11 @@ mgf <- read_excel('008_mge/zdruzeni_csv.xlsx') %>%
 mgf %>%  
   group_by(name) %>%  
   reframe(n = n_distinct(genomes))
+
+strains_mge <- mgf %>% 
+  group_by(STRAINS) %>% 
+  reframe(n = n_distinct(name), 
+          l = list(unique(name))) 
 
 mgf %>% 
   group_by(genomes, type) %>% 
@@ -56,6 +66,10 @@ mob %>%
   group_by(mge_acs) %>%  
   reframe(n = n_distinct(genomes))
 # Če imajo MGE imajo po MOB SUITE samo enega in si ga večina deli! 
+
+mob %>% 
+  group_by(STRAINS) %>% 
+  reframe(n = n_distinct(mge_acs))
 
 mob %>%  
   ggplot(aes(x = as.factor(TIMEPOINT), fill = as.factor(STRAINS))) +

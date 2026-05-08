@@ -41,9 +41,10 @@ virus_clusters <- read_tsv('012_genomad/virus_mmseq2/virus_clusters.tsv', col_na
   filter(!genome1 %in% c("H005_126", "H005_94"), 
          !genome2 %in% c("H005_126", "H005_94")) %>% 
   left_join(metadata, by = join_by('genome1' == 'samples')) %>% 
-  left_join(select(viruses, seq_name, topology, virus_score), by = 'seq_name') %>% 
-  filter(virus_score > 0.9)
-  
+  left_join(select(viruses, seq_name, topology, virus_score, taxonomy), by = 'seq_name') %>% 
+  filter(virus_score > 0.95)
+
+write.csv(virus_clusters, 'out/genomad/viral_clusters.csv')
 
 # Count shared clusters and who has them?
 virus_clusters %>% 
@@ -51,23 +52,55 @@ virus_clusters %>%
   reframe(n_genomes = n_distinct(genome1), 
           name_genomes = list(genome1))
 
+# virus_clusters %>% 
+#   ggplot(aes(x = seq_name, fill = as.factor(STRAINS))) +
+#   geom_bar() +
+#   coord_flip() +
+#   facet_wrap(~topology, scales = 'free', nrow = 3) +
+#   labs(x = 'Number of clusters detected', y = 'Viral cluster', fill = 'Strain')
+# ggsave('out/genomad/number_clusters_genome.png')
+# 
+# # How do viral clusters move across strains over time?
+# virus_clusters %>%
+#   ggplot(aes(x = as.factor(TIMEPOINT), y = seq_name, fill = as.factor(STRAINS))) +
+#   geom_tile() + 
+#   facet_wrap(~topology, scales = 'free', nrow = 3) +
+#   labs(x = 'Time point', y = 'Viral cluster', fill = 'Strain')
+# ggsave('out/genomad/viral_heatmap.png')
+# 
+# # 
+# virus_clusters %>%  
+#   group_by(STRAINS, TIMEPOINT) %>% 
+#   reframe(n_viruses = n_distinct(seq_name)/n_distinct(genome1), 
+#           seq_name) %>% 
+#   ggplot(aes(x = as.factor(TIMEPOINT), y = n_viruses, fill = seq_name)) +
+#   geom_col() +
+#   facet_wrap(~STRAINS, scales = 'free')
+
+# How to show across time 
+virus_clusters %>%  filter(STRAINS %in% c(6,7)) %>% 
+  ggplot(aes(y = seq_name, x = as.factor(TIMEPOINT),  fill = topology)) +
+  geom_tile() +
+  facet_wrap(~STRAINS, scales = 'free') +
+  labs(x = 'Time point', y = 'Viral cluster')
+ggsave('out/genomad/viruses_time_topology.png', dpi=600)
+
+length(unique(virus_clusters$seq_name))
+
 virus_clusters %>% 
-  ggplot(aes(x = seq_name, fill = as.factor(STRAINS))) +
-  geom_bar() +
-  coord_flip() +
-  facet_wrap(~topology, scales = 'free', nrow = 3) +
-  labs(x = 'Number of clusters detected', y = 'Viral cluster', fill = 'Strain')
-ggsave('out/genomad/number_clusters_genome.png')
+  ggplot(aes(y = genome1, x = as.factor(TIMEPOINT),  fill = seq_name)) +
+  geom_tile() +
+  facet_wrap(STRAINS~seq_name, scales = 'free') +
+  labs(x = 'Time point', y = 'Viral cluster')
 
-# How do viral clusters move across strains over time?
-virus_clusters %>%
-  ggplot(aes(x = as.factor(TIMEPOINT), y = seq_name, fill = as.factor(STRAINS))) +
-  geom_tile() + 
-  facet_wrap(~topology, scales = 'free', nrow = 3) +
-  labs(x = 'Time point', y = 'Viral cluster', fill = 'Strain')
-ggsave('out/genomad/viral_heatmap.png')
-
-
+virus_clusters %>% 
+  ggplot(aes(y = genome1, x = as.factor(TIMEPOINT),  fill = taxonomy)) +
+  geom_tile() +
+  facet_wrap(STRAINS~taxonomy, scales = 'free') +
+  labs(x = 'Time point', y = 'Viral cluster')
+  
+  
+  
 # Plasmids 
 # read plasmids into R 
 f_plasmids <- list.files(
@@ -94,11 +127,27 @@ plasmid_clusters <- read_tsv('012_genomad/plasmid_mmseq2/plasmid_clusters.tsv', 
          !genome2 %in% c("H005_126", "H005_94")) %>% 
   left_join(metadata, by = join_by('genome1' == 'samples')) %>% 
   left_join(select(plasmids, seq_name, topology, plasmid_score), by = 'seq_name') %>% 
-  filter(plasmid_score > 0.9)
+  filter(plasmid_score > 0.95)
+
+plasmid_clusters %>% filter(STRAINS %in% c(6,7)) %>% 
+  ggplot(aes(y = seq_name, x = as.factor(TIMEPOINT), fill = topology)) +
+  geom_tile() +
+  facet_wrap(~STRAINS, scales = 'free') +
+  labs(x = 'Time point', y = 'Plasmid cluster')
+ggsave('out/genomad/plasmids_time_topology.png', dpi=600)
+
+length(unique(plasmid_clusters$seq_name))
 
 plasmid_clusters %>% 
-  ggplot(aes(x = as.factor(TIMEPOINT), y = seq_name, fill = as.factor(STRAINS))) +
-  geom_tile() + 
-  facet_wrap(~topology, scales = 'free', nrow = 3) +
-  labs(x = 'Time point', y = 'Plasmid cluster', fill = 'Strain')
-ggsave('out/genomad/plasmid_heatmap.png')
+  ggplot(aes(y = genome1, x = as.factor(TIMEPOINT),  fill = seq_name)) +
+  geom_tile() +
+  facet_wrap(STRAINS~seq_name, scales = 'free') +
+  labs(x = 'Time point', y = 'Plasmid cluster')
+
+
+# plasmid_clusters %>% 
+#   ggplot(aes(x = as.factor(TIMEPOINT), y = seq_name, fill = as.factor(STRAINS))) +
+#   geom_tile() + 
+#   facet_wrap(~topology, scales = 'free', nrow = 3) +
+#   labs(x = 'Time point', y = 'Plasmid cluster', fill = 'Strain')
+# ggsave('out/genomad/plasmid_heatmap.png')

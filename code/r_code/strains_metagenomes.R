@@ -241,7 +241,7 @@ ggsave('out/gene_metagenomes/counts_normalized_by_gene_length.svg', dpi = 600)
 saveRDS(genes_norm_count %>% filter(person == 'H'), '006_quantify_genes_Lara/genes_norm_count.RDS')
 # log 10
 genes_norm_count %>% 
-  filter(person == 'H') %>% 
+  filter(person == 'H', biota == 'untreated sample') %>% 
   ggplot(aes(x = day, y = sum_norm_count, color = as.factor(STRAIN))) +
   geom_rect(data = events, aes(xmin = xmin, xmax = xmax, ymin = 0, ymax = Inf, fill = extremevent_type), inherit.aes = FALSE,
             alpha = 0.6) +
@@ -249,7 +249,7 @@ genes_norm_count %>%
   geom_line(linewidth = 2) +
   geom_point(size = 3) +
   scale_y_log10() +
-  facet_wrap(~biota) +
+  #facet_wrap(~biota) +
   labs(x = 'Day', y = '# reads normalized by the gene length\nand number of genes per strain [log10]', fill = 'Event', color = 'Strain')
 ggsave('out/gene_metagenomes/counts_normalized_by_gene_length_log10.svg', dpi = 600)
 

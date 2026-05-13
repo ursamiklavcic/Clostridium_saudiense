@@ -10,18 +10,18 @@ library(ape)
 library(Biostrings)
 
 # StrainPhlan Tree
-tree <- read.tree('09_strainPhlan/RAxML_bestTree.t__SGB6178.StrainPhlAn4.tre')
+tree <- read.tree('010_define_strains_metagenomes/09_strainPhlan/RAxML_bestTree.t__SGB6178.StrainPhlAn4.tre')
 
 plot(tree)
 
-metadata <- read.table("09_strainPhlan/metadata.tsv", sep = '\t', header = TRUE) %>%  
+metadata <- read.table("010_define_strains_metagenomes/09_strainPhlan/metadata.tsv", sep = '\t', header = TRUE) %>%  
   rbind(data.frame(sampleID = 'reference', 
                    subjectID = 'reference', 
-                   realtion  = 'reference', 
+                     realtion  = 'reference', 
                    timepoint = 0))
 
 # 
-alignment <- readDNAStringSet("09_strainPhlan/t__SGB6178.StrainPhlAn4_concatenated.aln")
+alignment <- readDNAStringSet("010_define_strains_metagenomes/09_strainPhlan/t__SGB6178.StrainPhlAn4_concatenated.aln")
 alignment_mat <- as.matrix(alignment)
 rownames(alignment_mat) <- names(alignment)
 
@@ -50,7 +50,7 @@ snp_df %>%  left_join(metadata, by = join_by('Sample' == 'sampleID')) %>%
   #mutate(POS = as.numeric(substr(POS, 2, 10))) %>%
   ggplot(aes(x = POS, y = Sample, fill = base)) +
   geom_tile() +
-  scale_fill_manual(values = c("A" = "red", "C" = "yellow", "G" = "green", "T" = "blue", '-' = 'white')) +
+  scale_fill_manual(values = c("A" = "#F87C63", "C" = "#F8E963", "G" = "#84D796", "T" = "#84ADD7", '-' = 'gray')) +
   labs(x = 'Position')  
 ggsave('out/strainphlan/snps_MH.png')
 # This is not ok - tooo many snps 
@@ -62,7 +62,7 @@ ggtree(tree) %<+% metadata +
   theme(legend.position = "bottom")
 
 samples_H <- metadata %>%
-  filter(subjectID == "H") %>%
+  filter(subjectID %in% c("H", 'reference')) %>%
   pull(sampleID)
 
 # Prune tree to keep only tips for subject "H"
@@ -70,11 +70,18 @@ pruned_tree <- drop.tip(tree, setdiff(tree$tip.label, samples_H))
 
 # Plot
 ggtree(pruned_tree) %<+% filter(metadata, subjectID == 'H') + 
-  geom_tippoint(aes(color=factor(timepoint)), size=3) +
+  geom_tippoint(aes(color=factor(timepoint)), size=4) +
   geom_tiplab() +
+  geom_treescale(width = 0.01) +
   theme(legend.position = "bottom") +
-  labs(color = 'Timepoint')
+  labs(color = 'Timepoint', caption = 'Branch lengths represent nucleotide substitutions per site\nacross aligned marker genes.\n0.01 length represents 10 SNP per 1000 aligned positions')
 ggsave('out/strainphlan/tree_H.png')
+
+# generate ordination plot based on sequence aligment file to confirm grouping from dendrogram. 
+
+
+
+
 
 # 
 # 
@@ -94,7 +101,7 @@ ggsave('out/strainphlan/tree_H.png')
 
 # Mutattion rates 
 
-mutation_pre <- read.table('09_strainPhlan/t__SGB6178.mutation', sep = '\t', header = T) %>% 
+mutation_pre <- read.table('010_define_strains_metagenomes/09_strainPhlan/t__SGB6178.mutation', sep = '\t', header = T) %>% 
   filter(ids %in% c('MH001', 'MH002', 'MH003', 'MH004', 'MH005', 'MH006', 'MH007', 'MH008', 'MH009', 'MH010', 'MH011', 'MH012', 'MH013', 
                     'SH001', 'SH002', 'SH003', 'SH004', 'SH005', 'SH006', 'SH007', 'SH008', 'SH009', 'SH010', 'SH011', 'SH012', 'SH013')) %>% 
   column_to_rownames('ids') %>%  

@@ -9,7 +9,10 @@ library(purrr)
 library(stringr)
 
 set.seed(96)
-theme_set(theme_bw(base_size = 14))
+theme_set(theme_bw(base_size = 12) +
+            theme(plot.title   = element_text(size = 12),
+                  axis.title   = element_text(size = 12),
+                  axis.text    = element_text(size = 12)))
 
 metadata <- read.table('~/projects/thesis/data/metadata.csv', sep = ';', header = TRUE) %>%  
   filter(person == 'H') %>% 
@@ -24,18 +27,20 @@ beta <- readRDS('~/projects/thesis/data/longitudinal_shotgun/nmds_mpa_positions.
 
 events <- read.table('~/projects/thesis/data/extreme_event_data.csv', sep = ',', header = T) %>% filter(person == 'H')
 
-alpha_plot <- ggplot(alpha, aes(x = day, y = shannon, color = biota)) +
+alpha_plot <- alpha %>% 
+  filter(biota == 'untretaed sample') %>% 
+  ggplot(aes(x = day, y = shannon)) +
   geom_rect(data = events, aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf, fill = extremevent_type), inherit.aes = FALSE,
             alpha = 0.6) +
   scale_fill_manual(values = c('white','#d94343', '#d98e43', '#f1f011', '#0c9910', '#3472b7', '#7934b7', '#b73485', '#0f5618')) +
   geom_point(size = 2) +
   geom_line(linewidth = 1.5) +
-  scale_color_manual(values = c('#f0a336', '#3CB371')) +
-  labs(x = 'Day', y = 'Shannon diveristy index', color = 'Sample type', fill = 'Event') +
+  labs(x = 'Day', y = 'Shannon diveristy index', fill = 'Event') +
   theme(legend.position = 'bottom')
 alpha_plot
 
 beta_plot <- beta %>% 
+  filter(biota == 'Bulk microbiota') %>% 
   filter(!is.na(person)) %>% 
   ggplot(aes(x=NMDS1, y=NMDS2, color=person)) +
   geom_point(size = 5) +
@@ -49,14 +54,15 @@ normalized <- readRDS('~/projects/longitudinal_amplicons/data/r_data/long_all.RD
   left_join(metadata, by = 'original_sample')
 
 norm_plot <- normalized %>% 
-  # group_by(day) %>% 
-  # reframe(norm_abund = sum(norm_abund)) %>% 
-  ggplot(aes(x = as.factor(day), y = norm_abund)) +
-  # geom_rect(data = events, aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf, fill = extremevent_type), inherit.aes = FALSE,
-  #           alpha = 0.6) +
-  # scale_fill_manual(values = c('white','#d94343', '#d98e43', '#f1f011', '#0c9910', '#3472b7', '#7934b7', '#b73485', '#0f5618')) +
-  geom_boxplot() +
-  scale_y_log10() +
+  filter(biota == 'untretaed sample') %>% 
+  group_by(day) %>% 
+  reframe(norm_abund = sum(norm_abund)) %>% 
+  ggplot(aes(x = day, y = norm_abund)) +
+  geom_rect(data = events, aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf, fill = extremevent_type), inherit.aes = FALSE,
+             alpha = 0.6) +
+  scale_fill_manual(values = c('white','#d94343', '#d98e43', '#f1f011', '#0c9910', '#3472b7', '#7934b7', '#b73485', '#0f5618')) +
+  geom_point(size = 3) +
+  geom_line(linewidth = 1.5) +
   labs(x = 'Day', y = 'Absolute bacterial abundance', fill = 'Event') +
   theme(legend.position = 'bottom')
 norm_plot
